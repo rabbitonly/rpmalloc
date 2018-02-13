@@ -491,7 +491,7 @@ static _Thread_local heap_t* _memory_thread_heap TLS_MODEL;
 static FORCEINLINE heap_t*
 get_thread_heap(void) {
 #if ENABLE_PRELOAD
-	return pthread_getspecific(_memory_thread_heap);
+	return _memory_thread_heap ? pthread_getspecific(_memory_thread_heap) : 0;
 #else
 	return _memory_thread_heap;
 #endif
@@ -1397,10 +1397,15 @@ _memory_deallocate(void* p) {
 	if (!p)
 		return;
 
+	heap_t* heap = get_thread_heap();
+#if ENABLE_PRELOAD
+	if (!heap)
+		return;
+#endif
+
 	//Grab the span (always at start of span, using 64KiB alignment)
 	span_t* span = (void*)((uintptr_t)p & _memory_span_mask);
 	int32_t heap_id = atomic_load32(&span->heap_id);
-	heap_t* heap = get_thread_heap();
 	//Check if block belongs to this heap or if deallocation should be deferred
 	if (heap_id == heap->id) {
 		if (span->size_class < SIZE_CLASS_COUNT)
