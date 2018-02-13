@@ -1636,6 +1636,8 @@ rpmalloc_finalize(void) {
 	rpmalloc_thread_finalize();
 	//If you hit this assert, you still have active threads or forgot to finalize some thread(s)
 	assert(atomic_load32(&_memory_active_heaps) == 0);
+	if (atomic_load32(&_memory_active_heaps) > 0)
+		return;
 
 	//Free all thread caches
 	for (size_t list_idx = 0; list_idx < HEAP_ARRAY_SIZE; ++list_idx) {
