@@ -105,7 +105,7 @@
 #  endif
 #else
 #  include <unistd.h>
-#  if defined(__APPLE__) && ENABLE_PRELOAD
+#  if ENABLE_PRELOAD
 #    include <pthread.h>
 #  endif
 #  define ALIGNED_STRUCT(name, alignment) struct __attribute__((__aligned__(alignment))) name
@@ -472,7 +472,7 @@ static atomic32_t _unmapped_total;
 #define MEMORY_UNUSED(x) (void)sizeof((x))
 
 //! Current thread heap
-#if defined(__APPLE__) && ENABLE_PRELOAD
+#if ENABLE_PRELOAD
 static pthread_key_t _memory_thread_heap;
 #else
 #  ifdef _MSC_VER
@@ -490,7 +490,7 @@ static _Thread_local heap_t* _memory_thread_heap TLS_MODEL;
 //! Get the current thread heap
 static FORCEINLINE heap_t*
 get_thread_heap(void) {
-#if defined(__APPLE__) && ENABLE_PRELOAD
+#if ENABLE_PRELOAD
 	return pthread_getspecific(_memory_thread_heap);
 #else
 	return _memory_thread_heap;
@@ -500,7 +500,7 @@ get_thread_heap(void) {
 //! Set the current thread heap
 static void
 set_thread_heap(heap_t* heap) {
-#if defined(__APPLE__) && ENABLE_PRELOAD
+#if ENABLE_PRELOAD
 	pthread_setspecific(_memory_thread_heap, heap);
 #else
 	_memory_thread_heap = heap;
@@ -1599,7 +1599,7 @@ rpmalloc_initialize_config(const rpmalloc_config_t* config) {
 	if (_memory_config.span_map_count > 128)
 		_memory_config.span_map_count = 128;
 
-#if defined(__APPLE__) && ENABLE_PRELOAD
+#if ENABLE_PRELOAD
 	if (pthread_key_create(&_memory_thread_heap, 0))
 		return -1;
 #endif
@@ -1700,7 +1700,7 @@ rpmalloc_finalize(void) {
 	assert(!atomic_load32(&_reserved_spans));
 #endif
 
-#if defined(__APPLE__) && ENABLE_PRELOAD
+#if ENABLE_PRELOAD
 	pthread_key_delete(_memory_thread_heap);
 #endif
 }
